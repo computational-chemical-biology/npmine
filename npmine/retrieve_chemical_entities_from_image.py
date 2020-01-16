@@ -32,4 +32,3 @@ def retrieve_chemical_entities_from_image(modification_doi):
                     os.remove('jnatprod.pdf')
                     os.remove('jnatprod.tx')
                     os.remove('osra_list')
-                    os.remove('osra_list')

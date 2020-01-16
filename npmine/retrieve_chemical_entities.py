@@ -43,3 +43,5 @@ def retrieve_chemical_entities(list_of_dois):
             for k in j["chemicalData"].values():
                 InChIkeys.append(k['standardInChIKey'])
 
+
+
