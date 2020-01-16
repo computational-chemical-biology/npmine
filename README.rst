@@ -7,15 +7,18 @@ Documentation on the npmine package
 **Installation**
 ---------------------------
 
+```
 conda create -n nplibrary   
 conda install -n nplibrary rdkit -c rdkit 
 pip install bs4 
 source activate nplibrary
-python setup.py install 
+python setup.py install
+
+```
 
 **Getting started**
 ---------------------------
-
+ 
 - Load python terminal and load packages
 - `Install docker and pull OSRA <https://hub.docker.com/r/berlinguyinca/osra/>`_
 - `Install gnfinder <https://github.com/gnames/gnfinder>`_
@@ -24,8 +27,10 @@ python setup.py install
 **Usage**
 ---------------------------
 
+```
 from npmine.retrieve_doi import retrieve_doi 
 dois = retrieve_doi() 
+```
 
 **Contributing**
 ---------------------------
