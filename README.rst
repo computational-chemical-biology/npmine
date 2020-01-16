@@ -16,10 +16,10 @@ python setup.py install
 **Getting started**
 ---------------------------
 
-Load python terminal and load packages
-`Install docker and pull OSRA <https://hub.docker.com/r/berlinguyinca/osra/>`_
-`Install gnfinder <https://github.com/gnames/gnfinder>`_
-`Install oscarpdf2json command line tool <https://bitbucket.org/mjw99/chemextractor/src/master/>`_
+- Load python terminal and load packages
+- `Install docker and pull OSRA <https://hub.docker.com/r/berlinguyinca/osra/>`_
+- `Install gnfinder <https://github.com/gnames/gnfinder>`_
+- `Install oscarpdf2json command line tool <https://bitbucket.org/mjw99/chemextractor/src/master/>`_
 
 **Usage**
 ---------------------------
