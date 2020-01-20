@@ -19,14 +19,11 @@ setup(
     license='BSD-3-Clause',
     packages=['npmine'],
     author='Ana Carolina L. Coelho',
-    author_email='ana.lunardello.coelho@usp.br'
+    author_email='ana.lunardello.coelho@usp.br',
     install_requires=[
           'markdown',
           'beautifulsoup4',
-          'requests',
-          'json',
-          'subprocess',
-          'itertools',
-    ], 
+          'requests'
+    ],
     dependency_links=['https://www.rdkit.org/docs/Install.html']
 )

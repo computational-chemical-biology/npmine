@@ -9,11 +9,15 @@ Documentation on the npmine package
 
 * conda create -n nplibrary   
 * conda install -n nplibrary rdkit -c rdkit 
-* pip install bs4 
 * source activate nplibrary
+* pip install bs4 
 * python setup.py install
 
+**Installation with docker**
+--------------------------- 
 
+* conda env export | grep -v "^prefix: " > environment .yml 
+* docker build . -t npmine 
 
 **Getting started**
 ---------------------------

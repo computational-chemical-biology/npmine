@@ -7,13 +7,14 @@ import subprocess
 import itertools
 from rdkit import Chem
 
-
+# Use the parameter journal_name to retrieve doi list from
+# different journals, starting with ACS group
 def retrieve_doi(journal_name='all'):
-    """Performs web scraping to obtain DOIs from journal of ACS 
+    """Performs web scraping to obtain DOIs from journal of ACS
     Parameters
     ----------
-    journal_name: str 
-        Dictionary containing node attributes and edge list from GNPS. 
+    journal_name: str
+        Dictionary containing node attributes and edge list from GNPS.
     Returns
         List containing DOIs.
     -------
@@ -39,7 +40,7 @@ def retrieve_doi(journal_name='all'):
     #From each html link, obtain the corresponding doi of each paper of
     #that issue 
     all_dois = {}
-    for i in new_list[:2]:
+    for i in new_list[1:]:
         html1 = "https://pubs.acs.org" + i
         pag = requests.get(html1)
         parser = BeautifulSoup(pag.text, "html.parser")
