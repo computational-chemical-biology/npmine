@@ -16,8 +16,11 @@ Documentation on the npmine package
 **Installation with docker**
 --------------------------- 
 
-* conda env export | grep -v "^prefix: " > environment .yml 
 * docker build . -t npmine 
+
+If a new library needs to be installed, don't forget to update the environment.yml file 
+
+* conda env export | grep -v "^prefix: " > environment.yml 
 
 **Getting started**
 ---------------------------

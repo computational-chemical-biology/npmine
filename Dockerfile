@@ -12,7 +12,6 @@ RUN \
 	cd /tmp && \
     git clone https://github.com/metamolecular/gocr-patched.git && \
 #	svn checkout svn://svn.code.sf.net/p/openbabel/code/openbabel/trunk /tmp/openbabel && \
-    wget -O /tmp/openbabel.tgz https://sourceforge.net/projects/osra/files/openbabel-patched/openbabel-2.3.2-patched.tgz && \
 	svn checkout svn://svn.code.sf.net/p/osra/code/tags/2.0.1 /tmp/osra
 
 #installing dependencies for osra
@@ -25,9 +24,9 @@ RUN \
 #apt-get install -y openbabel libopenbabel-dev
 
 RUN \
-    cd /tmp/ && \
-    tar -xvf openbabel.tgz && \
-    cd openbabel-2.3.2-patched && \ 
+    cd /tmp && \
+    git clone  https://github.com/openbabel/openbabel.git && \
+    cd openbabel && \ 
     mkdir build && \
     cd build && \
     cmake .. && \
