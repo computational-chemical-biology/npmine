@@ -19,18 +19,26 @@ RUN \
 #E: Package 'libgraphicsmagick3' has no installation candidate
 RUN \
 	apt-get install -y libtclap-dev libpotrace0  libpotrace-dev  libocrad-dev libgraphicsmagick++1-dev libgraphicsmagick++1-dev libgraphicsmagick++3 && \
-	apt-get install -y libeigen3-dev libgraphicsmagick1-dev libgraphicsmagick-q16-3 libnetpbm10-dev libpoppler-dev libpoppler-cpp-dev libleptonica-dev wget tesseract-ocr tesseract-ocr-eng
+	apt-get install -y libeigen3-dev libgraphicsmagick1-dev libnetpbm10-dev libpoppler-dev libpoppler-cpp-dev libleptonica-dev wget tesseract-ocr tesseract-ocr-eng
 
 #apt-get install -y openbabel libopenbabel-dev
+RUN \
+    echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty universe' >> /etc/apt/sources.list && \
+    echo 'deb http://security.ubuntu.com/ubuntu xenial-security main' >> /etc/apt/sources.list && \
+    apt-get update
+
+RUN apt-get install -y openbabel libopenbabel-dev libgraphicsmagick3
+
 
 RUN \
-    cd /tmp && \
-    git clone  https://github.com/openbabel/openbabel.git && \
-    cd openbabel && \ 
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j2 && \
+    wget -O /tmp/openbabel.tgz https://sourceforge.net/projects/osra/files/openbabel-patched/openbabel-2.3.2-tr1-memory.tgz && \
+    cd /tmp/ && \
+    tar -xvf openbabel.tgz && \
+    cd openbabel-2.3.2-tr1-memory && \
+    mkdir build  && \
+    cd build  && \
+    cmake ..  && \
+    make -j2  && \
     make install
 
 #patching gocr
@@ -43,6 +51,8 @@ RUN \
 #installing osra
 RUN \
 	cd /tmp/osra && \
+        wget https://gist.githubusercontent.com/mcs07/7b722cfafe8bad81aa69/raw/8886e5feb2f97183b3117b6a84e46c19c05a807b/osra-adaptiveThreshold.diff && \
+        git apply osra-adaptiveThreshold.diff && \
 	./configure --with-tesseract && \
 	make all && \
 	make install && \

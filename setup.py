@@ -25,5 +25,6 @@ setup(
           'beautifulsoup4',
           'requests'
     ],
+    data_files=['cfg/config.ini'],
     dependency_links=['https://www.rdkit.org/docs/Install.html']
 )

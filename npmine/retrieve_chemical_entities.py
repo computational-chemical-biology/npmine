@@ -6,7 +6,13 @@ import json
 import subprocess
 import itertools
 from rdkit import Chem
+import configparser
+import npmine
 
+fullname = os.path.join(npmine.__path__[0], '..', 'config.ini')
+
+config = configparser.ConfigParser()
+config.read(fullname)
 
 def retrieve_chemical_entities(list_of_dois):
     """Obtain publication from DOI and retrieves chemical information
@@ -22,9 +28,9 @@ def retrieve_chemical_entities(list_of_dois):
     #From each pdf link, the pdf is downloaded and then OSCAR is used to
     #transform the file into json and obtain the chemical entities
     json_list_doi = []
-    for z in list_of_doi:
+    for z in list_of_dois:
         subprocess.call(['wget', '-O', 'jnatprod.pdf', z])
-        os.system('oscarpdf2json jnatprod.pdf > jnatprod.json')
+        os.system('%s jnatprod.pdf > jnatprod.json' % config['TOOLS']['OSCAR'])
         if os.path.isfile('jnatprod.json'):
             with open('jnatprod.json') as f:
                 jnatprod = json.load(f)
@@ -32,16 +38,3 @@ def retrieve_chemical_entities(list_of_dois):
                 os.remove('jnatprod.json')
             json_list_doi.append({z:{'oscar':jnatprod}})
     return json_list_doi
-
-    #A list with all the InCHI keys is created so that the functions below
-    #can be used to obtain either the PubChem ID or the SpiderChem ID of 
-    #each chemical entity
-    InChIkeys = []
-    dictionary = json_list_doi[1]['https://pubs.acs.org/doi/pdf/10.1021/np50001a001']
-    for i in dictionary.values():
-        for j in i:
-            for k in j["chemicalData"].values():
-                InChIkeys.append(k['standardInChIKey'])
-
-
-
