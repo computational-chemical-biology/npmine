@@ -1,11 +1,7 @@
 #Import all necessary packages
 import requests
-from bs4 import BeautifulSoup
 import os
 import json
-import subprocess
-import itertools
-from rdkit import Chem
 import configparser
 import requests
 import npmine
@@ -33,12 +29,12 @@ def download_pdf(url, filename):
         r.raise_for_status()
 
 
-def retrieve_chemical_entities(url):
+def retrieve_chemical_entities(filename):
     """Obtain chemical information
     Parameters
     ----------
-    url: str
-        url containing pdf file name after '/' or pdf file name.
+    filename: str
+        pdf file name.
     Returns
         Chemical entity dictionary.
     -------
@@ -46,12 +42,13 @@ def retrieve_chemical_entities(url):
 
     #From each pdf link, the pdf is downloaded and then OSCAR is used to
     #transform the file into json and obtain the chemical entities
-    doi = url.split('/')[-1] # for jnatprod
-    os.system('%s %s.pdf > %s.json' % (config['TOOLS']['OSCAR'], doi, doi))
-    if os.path.isfile('%s.json' % doi):
-        with open('%s.json' % doi) as f:
+    filename = filename.replace('.pdf', '')
+    os.system('%s %s.pdf > %s.json' % (config['TOOLS']['OSCAR'], filename,
+                                       filename))
+    if os.path.isfile('%s.json' % filename):
+        with open('%s.json' % filename) as f:
             jnatprod = json.load(f)
-            os.remove('%s.json' % doi)
-        return {doi:{'oscar':jnatprod}}
+            os.remove('%s.json' % filename)
+        return {filename:{'oscar':jnatprod}}
     else:
-        return {doi:{'oscar': []}}
+        return {filename:{'oscar': []}}
