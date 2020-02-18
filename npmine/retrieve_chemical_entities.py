@@ -1,5 +1,4 @@
 #Import all necessary packages
-import requests
 import os
 import json
 import configparser

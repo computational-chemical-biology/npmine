@@ -105,3 +105,130 @@ for f in fls[2016:]:
     with open("entities.json", "w+") as jsonFile:
         json.dump(entities, jsonFile)
 
+dflist = []
+for e in entities:
+    for k,v in e.items():
+        if len(v['oscar'])==0:
+            continue
+        elif len(v['oscar'])>1:
+            print('Warning, list with more than one element!')
+            break
+        else:
+            tmp = pd.DataFrame(v['oscar'][0]['chemicalData']).T
+            tmp['doi'] = k
+            dflist.append(tmp)
+
+df = pd.concat(dflist, sort=False)
+
+# stats
+df.reset_index(drop=True, inplace=True)
+df.shape
+len(df['standardInChIKey'].unique())
+df['doi'].value_counts()
+df['standardInChIKey'].value_counts()
+
+exactMol = []
+
+for x in df.standardInChI:
+    try:
+        exactMol.append(rdMD.CalcExactMolWt(Chem.MolFromInchi(x)))
+    except:
+        exactMol.append(0)
+
+df['ExactMolWt'] = exactMol
+df['ExactMolWt'].median()
+df.to_csv('entities_dataframe.tsv', sep='\t', index=None)
+
+
+nms = []
+fls = os.listdir('gn_txt/')
+for fl in fls:
+    with open(os.path.join('gn_txt', fl)) as f:
+        gn = json.load(f)
+
+    if gn['names']==None:
+        continue
+
+    for nm in gn['names']:
+        matchType = nm['verification']['BestResult']['matchType']
+        if matchType == 'NoMatch':
+            nms.append([fl.replace('_gn.txt', ''),
+                        nm['verbatim'], nm['odds'],
+                        '', '', '', '', matchType])
+        elif 'classificationRank' in nm['verification']['BestResult'].keys():
+            nms.append([fl.replace('_gn.txt', ''),
+                        nm['verbatim'], nm['odds'],
+                        nm['verification']['BestResult']['dataSourceId'],
+                        nm['verification']['BestResult']['taxonId'],
+                        nm['verification']['BestResult']['classificationPath'],
+                        nm['verification']['BestResult']['classificationRank'],
+                        matchType])
+        else:
+            nms.append([fl.replace('_gn.txt', ''),
+                        nm['verbatim'], nm['odds'],
+                        nm['verification']['BestResult']['dataSourceId'],
+                        nm['verification']['BestResult']['taxonId'],
+                        '', '', matchType])
+
+
+
+dfnms = pd.DataFrame(nms)
+dfnms.columns = ['doi', 'verbatim', 'odds', 'dataSourceId',
+                 'taxonId', 'classificationPath',
+                 'classificationRank', 'matchType']
+
+sum(dfnms['taxonId']=='')
+sum(dfnms['matchType']=='NoMatch')
+dfnms['matchType'].unique()
+len(dfnms['doi'].unique())
+len(dfnms.loc[dfnms['matchType']!='NoMatch','taxonId'].unique())
+sum(dfnms['classificationPath']=='')
+
+dfnms.to_csv('gn_dataframe.tsv', sep='\t', index=None)
+
+with open('jnatprod_pdfs/image_entity.json') as f:
+    imgs = json.load(f)
+
+imglist = []
+for img in imgs:
+    for k,v in img.items():
+        for s in v['osra']:
+            s = s.strip()
+            m = Chem.MolFromSmiles(s)
+            if m==None:
+                imglist.append([k, s, '', 0])
+            else:
+                imglist.append([k, s, Chem.MolToInchiKey(m),
+                                rdMD.CalcExactMolWt(m)])
+
+dfimg = pd.DataFrame(imglist)
+dfimg.columns = ['doi', 'smiles', 'standardInChIKey', 'ExactMolWt']
+
+sum(dfimg['standardInChIKey']!='')
+len(dfimg.loc[dfimg['standardInChIKey']!='', 'standardInChIKey'].unique())
+len(dfimg.loc[dfimg['standardInChIKey']!='', 'doi'].unique())
+
+dfimg.to_csv('img_dataframe.tsv', sep='\t', index=None)
+
+sall = pd.concat([df[['doi', 'standardInChIKey']],
+                  dfimg.loc[dfimg['standardInChIKey']!='', ['doi', 'standardInChIKey']]])
+
+sall['doi'] = sall['doi'].str.replace('jnatprod_pdfs/', '')
+sall = sall[~sall.duplicated()]
+sall.reset_index(inplace=True, drop=True)
+
+keys = sall['standardInChIKey'].unique()
+
+dbid = []
+for k in keys:
+    dbid.append([k, inchikey2cid(k)])
+
+dbids = pd.DataFrame(dbid)
+dbids.fillna(0, inplace=True)
+dbids[1] = dbids[1].astype(int)
+dbids[1] = dbids[1].astype(str)
+dbids.replace('0', '', inplace=True)
+sum(dbids[1]=='')
+
+dbids.to_csv('all_ids_pubchem_chemspider.tsv', sep='\t', index=None)
+
