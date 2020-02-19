@@ -232,3 +232,24 @@ sum(dbids[1]=='')
 
 dbids.to_csv('all_ids_pubchem_chemspider.tsv', sep='\t', index=None)
 
+idfimg = pd.merge(dfimg, dbids, left_on='standardInChIKey', right_on=0, how='left')
+idfimg.drop(0, axis=1, inplace=True)
+idfimg.fillna('', inplace=True)
+idfimg.rename(columns={1: 'pubchem'}, inplace=True)
+idfimg.to_csv('img_dataframe.tsv', sep='\t', index=None)
+
+idf = pd.merge(df, dbids, left_on='standardInChIKey', right_on=0, how='left')
+idf.drop(0, axis=1, inplace=True)
+idf.fillna('', inplace=True)
+idf.rename(columns={1: 'pubchem'}, inplace=True)
+idf.to_csv('entities_dataframe.tsv', sep='\t', index=None)
+
+idf['doi'] = idf['doi'].str.replace('jnatprod_pdfs/', '')
+idf['smiles'] = ''
+idf['source'] = 'oscar'
+
+idfimg['standardInChI'] = ''
+idfimg['source'] = 'osra'
+
+dfall = pd.concat([idf[idfimg.columns], idfimg])
+dfall.to_csv('entities_img_dataframe.tsv', sep='\t', index=None)
