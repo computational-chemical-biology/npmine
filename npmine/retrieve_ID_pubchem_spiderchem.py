@@ -1,7 +1,5 @@
 import json
-import configparser
 import requests
-import npmine
 
 fullname = os.path.join(npmine.__path__[0], '..', 'config.ini')
 
@@ -9,18 +7,24 @@ config = configparser.ConfigParser()
 config.read(fullname)
 
 
-def inchikey2csid(inchi):
+def inchikey2csid(inchi, consumer_key=''):
     """Obtains ID of chemical entity from InCHIKeys
     Parameters
     ----------
     inchi: string
         InCHIkey identifier.
+    consumer_key: string
+         ChemSpider consumer key.
     Returns
-        SpiderChem ID.
+        ChemSpider ID.
     -------
     """
+    if consumer_key=='':
+        consumer_key = config['TOOLS']['CONSUMER_KEY']
+        if consumer_key==None:
+            raise Exception('Please set the consumer key!')
     data = {"inchikey": inchi}
-    headers = {"apikey": config['TOOLS']['CONSUMER_KEY']}
+    headers = {"apikey": consumer_key}
     purl = 'https://api.rsc.org/compounds/v1/filter/inchikey'
     r = requests.post(purl, data=json.dumps(data), headers=headers)
     if r.status_code==200:
@@ -39,12 +43,14 @@ def inchikey2csid(inchi):
     else:
         return None
 
-def inchikey2cid(inchi):
+def inchikey2cid(inchi, consumer_key=''):
     """Obtains ID of chemical entity from InCHIKeys
     Parameters
     ----------
     inchi: string
         InCHIkey identifier.
+    consumer_key: string
+         ChemSpider consumer key.
     Returns
         PubChem ID.
     -------

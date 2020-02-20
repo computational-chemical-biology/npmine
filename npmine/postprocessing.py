@@ -54,13 +54,15 @@ def entity_dict2dataframe(entities, exact_mass=True):
 
     return df
 
-def sci_name_dict2dataframe(gn):
+def sci_name_dict2dataframe(gn, identifier):
     """Converts scientific species dictionary obtained with gnfinder
        to pandas DataFrame
     Parameters
     ----------
     gn: dict
         Dictiorary containing scientific names.
+    identifier: str
+        Identifier for the dict data.
     Returns
         pandas DataFrame.
     -------
@@ -68,11 +70,11 @@ def sci_name_dict2dataframe(gn):
     for nm in gn['names']:
         matchType = nm['verification']['BestResult']['matchType']
         if matchType == 'NoMatch':
-            nms.append([fl.replace('_gn.txt', ''),
+            nms.append([identifier,
                         nm['verbatim'], nm['odds'],
                         '', '', '', '', matchType])
         elif 'classificationRank' in nm['verification']['BestResult'].keys():
-            nms.append([fl.replace('_gn.txt', ''),
+            nms.append([identifier,
                         nm['verbatim'], nm['odds'],
                         nm['verification']['BestResult']['dataSourceId'],
                         nm['verification']['BestResult']['taxonId'],
@@ -80,7 +82,7 @@ def sci_name_dict2dataframe(gn):
                         nm['verification']['BestResult']['classificationRank'],
                         matchType])
         else:
-            nms.append([fl.replace('_gn.txt', ''),
+            nms.append([identifier,
                         nm['verbatim'], nm['odds'],
                         nm['verification']['BestResult']['dataSourceId'],
                         nm['verification']['BestResult']['taxonId'],

@@ -42,8 +42,7 @@ def retrieve_chemical_entities(filename):
     #From each pdf link, the pdf is downloaded and then OSCAR is used to
     #transform the file into json and obtain the chemical entities
     filename = filename.replace('.pdf', '')
-    os.system('%s %s.pdf > %s.json' % (config['TOOLS']['OSCAR'], filename,
-                                       filename))
+    os.system('%s %s.pdf > %s.json' % (config['TOOLS']['OSCAR'], filename, filename))
     if os.path.isfile('%s.json' % filename):
         with open('%s.json' % filename) as f:
             jnatprod = json.load(f)

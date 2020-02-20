@@ -84,9 +84,6 @@ RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.s
     rm /tmp/miniconda.sh
 ENV PATH=/opt/conda/bin:$PATH
 
-#install pdftotext
-RUN apt-get install -y poppler-utils
-
 COPY environment.yml /tmp/environment.yml
 
 RUN conda env create -f /tmp/environment.yml

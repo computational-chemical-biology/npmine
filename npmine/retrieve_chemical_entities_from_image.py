@@ -19,7 +19,7 @@ def retrieve_chemical_entities_from_image(filename):
     -------
     """
     filename = filename.replace('.pdf', '') # for jnatprod
-    os.system(config['TOOLS']['OSRA'].format(*[filename]*2))
+    os.system('%s %s.pdf -v -w %s.txt' % (config['TOOLS']['OSRA'], filename, filename))
     if os.path.isfile('%s.txt' % filename):
         with open('%s.txt' % filename) as f:
             jnatprod = f.readlines()
