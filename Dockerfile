@@ -1,94 +1,117 @@
-FROM ubuntu:18.04
-#FROM openjdk:8
-#MAINTAINER Gert wohlgemuth <wohlgemuth@ucdavis.edu>
+FROM ubuntu:14.04 
 
-#installing build tools
+MAINTAINER Ricardo R. da Silva <ridasilva@usp.br>
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    lzip \
+    curl \
+    wget \
+    libtclap-dev \
+    libpotrace0  \
+    libpotrace-dev  \
+    libocrad-dev \
+    openbabel \
+    libopenbabel-dev  \
+    libgraphicsmagick++-dev \
+    libnetpbm10-dev \
+&&  apt-get clean \
+&&  rm -rf /var/lib/lists/*
+ENV CXXFLAGS -pthread 
+
+RUN mkdir -p /tmp/OSRA \
+    && curl http://ftp.gnu.org/gnu/ocrad/ocrad-0.25.tar.lz \
+    | tar --lzip -xC /tmp/OSRA \
+    && cd /tmp/OSRA/ocrad-0.25 \
+    && ./configure \
+    && make \
+    && make install
+
+RUN mkdir -p /tmp/OSRA &&  \
+    cd /tmp/OSRA &&  \
+    wget http://cactus.nci.nih.gov/osra/gocr-0.50pre-patched.tgz && \
+    tar -xvf gocr-0.50pre-patched.tgz && \
+    cd gocr-0.50pre-patched && \
+    ./configure &&  \
+    make libs && \
+    make all install
+
+RUN mkdir -p /tmp/OSRA \
+    && cd /tmp/OSRA \
+    && wget http://downloads.sourceforge.net/project/osra/osra/2.0.1/osra-2.0.1.tgz \
+    && tar -xvf /tmp/OSRA/osra-2.0.1.tgz \
+    && cd /tmp/OSRA/osra-2.0.1 \
+    && ./configure \
+    && make all \
+    && make install
+RUN cd && rm -rf /tmp/OSRA
+
 RUN \
-	apt-get update && \
-	apt-get install -y build-essential automake checkinstall git cmake subversion openjdk-8-jdk wget
+    apt-get install git default-jdk -y
 
-#fetching source codes
-RUN \
-	cd /tmp && \
-    git clone https://github.com/metamolecular/gocr-patched.git && \
-#	svn checkout svn://svn.code.sf.net/p/openbabel/code/openbabel/trunk /tmp/openbabel && \
-	svn checkout svn://svn.code.sf.net/p/osra/code/tags/2.0.1 /tmp/osra
+#RUN \
+#    apt-get install unzip -y
+#
+#RUN \
+#     cd /opt && \
+#     wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.zip && \
+#     unzip apache-maven-3.6.3-bin.zip && \
+#     ln -s /opt/apache-maven-3.6.3 /opt/maven && \
+#     echo 'export JAVA_HOME=/usr/lib/jvm/default-java' > ~/.bashrc && \
+#     echo 'export M2_HOME=/opt/maven' > ~/.bashrc && \
+#     echo 'export MAVEN_HOME=/opt/maven' > ~/.bashrc && \
+#     echo 'export PATH=${M2_HOME}/bin:${PATH}' > ~/.bashrc && \
+#     . ~/.bashrc
+#
+#RUN \
+#     echo $MAVEN_HOME && \
+#     ls $JAVA_HOME && \
+#     /opt/maven/bin/mvn -version
+#
+#RUN \
+#    cd /bin && \
+#    git clone https://bitbucket.org/mjw99/chemextractor.git && \
+#    cd chemextractor ; /opt/maven/bin/mvn clean package ; dpkg -i ./target/*.deb
+#
 
-#installing dependencies for osra
-#libgraphicsmagick3 
-#E: Package 'libgraphicsmagick3' has no installation candidate
-RUN \
-	apt-get install -y libtclap-dev libpotrace0  libpotrace-dev  libocrad-dev libgraphicsmagick++1-dev libgraphicsmagick++1-dev libgraphicsmagick++3 && \
-	apt-get install -y libeigen3-dev libgraphicsmagick1-dev libnetpbm10-dev libpoppler-dev libpoppler-cpp-dev libleptonica-dev wget tesseract-ocr tesseract-ocr-eng
+COPY chemextractor_1.0~SNAPSHOT_all.deb /tmp/
+RUN dpkg -i /tmp/chemextractor_1.0~SNAPSHOT_all.deb
 
-#apt-get install -y openbabel libopenbabel-dev
-RUN \
-    echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty universe' >> /etc/apt/sources.list && \
-    echo 'deb http://security.ubuntu.com/ubuntu xenial-security main' >> /etc/apt/sources.list && \
-    apt-get update
-
-RUN apt-get install -y openbabel libopenbabel-dev libgraphicsmagick3
-
-
-RUN \
-    wget -O /tmp/openbabel.tgz https://sourceforge.net/projects/osra/files/openbabel-patched/openbabel-2.3.2-tr1-memory.tgz && \
-    cd /tmp/ && \
-    tar -xvf openbabel.tgz && \
-    cd openbabel-2.3.2-tr1-memory && \
-    mkdir build  && \
-    cd build  && \
-    cmake ..  && \
-    make -j2  && \
-    make install
-
-#patching gocr
-RUN \
-	cd /tmp/gocr-patched && \
-	./configure && \
-	make libs && \
-	make all install
-
-#installing osra
-RUN \
-	cd /tmp/osra && \
-        wget https://gist.githubusercontent.com/mcs07/7b722cfafe8bad81aa69/raw/8886e5feb2f97183b3117b6a84e46c19c05a807b/osra-adaptiveThreshold.diff && \
-        git apply osra-adaptiveThreshold.diff && \
-	./configure --with-tesseract && \
-	make all && \
-	make install && \
-	echo export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib >> ~/.bashrc
-
-#useful converter
-RUN \
-	apt-get install -y imagemagick
+#install pdftotext
+RUN apt-get install -y poppler-utils
 
 #install gnfinder 
 RUN \
-    cd /bin && \
-    git clone https://github.com/gnames/gnfinder.git && \
-    cd gnfinder && \
-    make install
-
-#install chemextractor/oscarpdf2json
-RUN \
-    cd /bin && \
-    git clone https://bitbucket.org/mjw99/chemextractor.git && \
-    cd chemextractor ; mvn clean package ; sudo dpkg -i ./target/*.deb
+	wget https://github.com/gnames/gnfinder/releases/download/v0.9.1/gnfinder-v0.9.1-linux.tar.gz -P /tmp && \
+	tar xf /tmp/gnfinder-v0.9.1-linux.tar.gz -C /bin
 
 #install npmine
-RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O /tmp/miniconda.sh  && \
-    echo 'e1045ee415162f944b6aebfe560b8fee */tmp/miniconda.sh' | md5sum -c - && \
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh  && \
     bash /tmp/miniconda.sh -f -b -p /opt/conda && \
-    /opt/conda/bin/conda install --yes -c conda-forge \
-    /opt/conda/bin/pip install --upgrade pip && \
     rm /tmp/miniconda.sh
 ENV PATH=/opt/conda/bin:$PATH
 
-COPY environment.yml /tmp/environment.yml
+#COPY environment.yml /tmp/environment.yml
 
-RUN conda env create -f /tmp/environment.yml
+#RUN conda env create -f /tmp/environment.yml
+RUN conda create -n nplibrary python=3 -y
 RUN echo "source activate nplibrary" > ~/.bashrc
 ENV PATH /opt/conda/envs/nplibrary/bin:$PATH
+
+RUN bash ~/.bashrc
+RUN conda install -c rdkit rdkit
+RUN pip install pandas requests bs4 configparser ipykernel jupyter
+#RUN pip install git+https://gitlab.com/rsilvabioinfo/npmine_library
+RUN python -m ipykernel install --user --name nplibrary --display-name nplibrary
+COPY . .
+RUN python setup.py install
+
+RUN mkdir -p /home/npmine/
+WORKDIR /home/npmine/
+#COPY ../notebooks notebooks
+EXPOSE 8888
 
 #cleanup
 RUN rm -rf /var/lib/apt/lists/*

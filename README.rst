@@ -10,13 +10,17 @@ Documentation on the npmine package
 * conda create -n nplibrary   
 * conda install -n nplibrary rdkit -c rdkit 
 * source activate nplibrary
-* pip install bs4 
+* pip install bs4 requests pandas 
 * python setup.py install
 
 **Installation with docker**
 --------------------------- 
 
 * docker build . -t npmine 
+
+* docker run -it -p 8888:8888 -v "$PWD":/home/npmine npmine:latest
+
+* jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root
 
 If a new library needs to be installed, don't forget to update the environment.yml file 
 

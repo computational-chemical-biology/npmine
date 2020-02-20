@@ -28,7 +28,7 @@ def html2txt(url, filename):
     f.write(gnfinder)
     f.close()
 
-def retrieve_scietific_name(input_file, out_file):
+def retrieve_scientific_name(input_file, out_file):
     """retrieves scientific names present in the document
     Parameters
     ----------
