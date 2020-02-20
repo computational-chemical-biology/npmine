@@ -100,9 +100,11 @@ RUN conda create -n nplibrary python=3 -y
 RUN echo "source activate nplibrary" > ~/.bashrc
 ENV PATH /opt/conda/envs/nplibrary/bin:$PATH
 
+RUN conda init bash
 RUN bash ~/.bashrc
-RUN conda install -c rdkit rdkit
+RUN conda install -n nplibrary -c rdkit rdkit -y
 RUN pip install pandas requests bs4 configparser ipykernel jupyter
+RUN pip install seaborn biopython 
 #RUN pip install git+https://gitlab.com/rsilvabioinfo/npmine_library
 RUN python -m ipykernel install --user --name nplibrary --display-name nplibrary
 COPY . .
