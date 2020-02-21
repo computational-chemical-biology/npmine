@@ -105,6 +105,7 @@ RUN bash ~/.bashrc
 RUN conda install -n nplibrary -c rdkit rdkit -y
 RUN pip install pandas requests bs4 configparser ipykernel jupyter
 RUN pip install seaborn biopython 
+RUN pip install snakemake 
 #RUN pip install git+https://gitlab.com/rsilvabioinfo/npmine_library
 RUN python -m ipykernel install --user --name nplibrary --display-name nplibrary
 COPY . .
