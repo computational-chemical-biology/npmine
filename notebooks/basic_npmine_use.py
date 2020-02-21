@@ -217,11 +217,16 @@ sall['doi'] = sall['doi'].str.replace('jnatprod_pdfs/', '')
 sall = sall[~sall.duplicated()]
 sall.reset_index(inplace=True, drop=True)
 
+missing = list(set(dfimg.loc[dfimg['standardInChIKey']!='', 'standardInChIKey'])-set(dbids[0]))
 keys = sall['standardInChIKey'].unique()
 
 dbid = []
 for k in keys:
     dbid.append([k, inchikey2cid(k)])
+
+mdbid = []
+for k in missing:
+    mdbid.append([k, inchikey2cid(k)])
 
 dbids = pd.DataFrame(dbid)
 dbids.fillna(0, inplace=True)

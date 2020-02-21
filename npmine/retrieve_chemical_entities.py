@@ -21,7 +21,7 @@ def download_pdf(url, filename):
     -------
     """
     r = requests.get(url)
-    if r.status_code!=200:
+    if r.status_code==200:
         with open(filename, 'wb') as fd:
             fd.write(r.content)
     else:
