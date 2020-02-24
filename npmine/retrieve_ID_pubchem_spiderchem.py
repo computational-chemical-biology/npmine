@@ -1,5 +1,8 @@
 import json
 import requests
+import configparser
+import os
+import npmine
 
 fullname = os.path.join(npmine.__path__[0], '..', 'config.ini')
 
@@ -55,10 +58,9 @@ def inchikey2cid(inchi, consumer_key=''):
         PubChem ID.
     -------
     """
-
     gurl = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/%s/cids/JSON' % inchi
     r = requests.get(gurl)
     if r.status_code==200:
         return json.loads(r.text)['IdentifierList']['CID'][0]
     else:
-        return inchikey2csid(inchi)
+        return inchikey2csid(inchi, consumer_key=consumer_key)

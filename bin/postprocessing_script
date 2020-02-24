@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+
+from npmine.postprocessing import entity_dict2dataframe
+from npmine.postprocessing import sci_name_dict2dataframe
+from npmine.postprocessing import image_dict2dataframe
+from npmine.retrieve_ID_pubchem_spiderchem import *
+import pandas as pd
+import os
+import json
+import sys
+
+
+'''usage
+   postprocessing_script.py <oscar dir> <gn dir> <osra dir> <consumer key> <out dir>
+'''
+
+def postprocessing(oscar_dir, gn_dir, osra_dir,
+                   consumer_key, out_dir):
+    oscar_dir = oscar_dir.split('/')[0]
+    dflist = []
+    fls = os.listdir(oscar_dir)
+    for fl in fls:
+        entities = {}
+        with open(os.path.join(oscar_dir, fl), encoding='utf-8') as f:
+            ent = json.load(f)
+        entities[fl] = {'oscar': ent}
+        dflist.append(entity_dict2dataframe(entities))
+
+    oscar = pd.concat(dflist)
+
+    gn_dir = gn_dir.split('/')[0]
+    nms = []
+    fls = os.listdir(gn_dir)
+    for fl in fls:
+        with open(os.path.join(gn_dir, fl), encoding='utf-8') as f:
+            gn = json.load(f)
+        nms.append(sci_name_dict2dataframe(gn, fl))
+
+    gns = pd.concat(nms)
+
+    osra_dir = osra_dir.split('/')[0]
+    imglist = []
+    fls = os.listdir(osra_dir)
+    for fl in fls:
+        img = {}
+        with open(os.path.join(osra_dir, fl), encoding='utf-8') as f:
+            smi = f.readlines()
+        if not len(smi):
+            continue
+        img[fl] = {'osra': smi}
+        imglist.append(image_dict2dataframe(img))
+
+    imgs = pd.concat(imglist)
+
+    sall = pd.concat([oscar[['doi', 'standardInChIKey']],
+                      imgs.loc[imgs['standardInChIKey']!='', ['doi', 'standardInChIKey']]])
+
+    sall['doi'] = sall['doi'].str.replace('.json|.txt', '')
+    sall = sall[~sall.duplicated()]
+    sall.reset_index(inplace=True, drop=True)
+
+    keys = sall['standardInChIKey'].unique()
+    keys = keys[keys!=None]
+
+    dbid = []
+    for k in keys:
+        dbid.append([k, inchikey2cid(k,
+                                     consumer_key=consumer_key)])
+
+    dbids = pd.DataFrame(dbid)
+    dbids.fillna(0, inplace=True)
+    dbids[1] = dbids[1].astype(int)
+    dbids[1] = dbids[1].astype(str)
+    dbids.replace('0', '', inplace=True)
+
+    idfimg = pd.merge(imgs, dbids, left_on='standardInChIKey', right_on=0, how='left')
+    idfimg.drop(0, axis=1, inplace=True)
+    idfimg.fillna('', inplace=True)
+    idfimg.rename(columns={1: 'pubchem'}, inplace=True)
+    idfimg['doi'] = idfimg['doi'].str.replace('.txt|.json', '')
+
+    idf = pd.merge(oscar, dbids, left_on='standardInChIKey', right_on=0, how='left')
+    idf.drop(0, axis=1, inplace=True)
+    idf.fillna('', inplace=True)
+    idf.rename(columns={1: 'pubchem'}, inplace=True)
+    idf['doi'] = idf['doi'].str.replace('.txt|.json', '')
+
+    idf['smiles'] = ''
+    idf['source'] = 'oscar'
+
+    idfimg['standardInChI'] = ''
+    idfimg['source'] = 'osra'
+
+    out_dir = out_dir.split('/')[0]
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    dfall = pd.concat([idf[idfimg.columns], idfimg])
+    dfall.to_csv('%s/entities_img_dataframe.tsv' % out_dir, sep='\t', index=None)
+    gns.to_csv('%s/gn_dataframe.tsv' % out_dir, sep='\t', index=None)
+
+if __name__ == '__main__':
+    postprocessing(sys.argv[1], sys.argv[2], sys.argv[3],
+                   sys.argv[4], sys.argv[5])

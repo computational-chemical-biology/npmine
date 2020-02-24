@@ -37,10 +37,15 @@ def entity_dict2dataframe(entities, exact_mass=True):
             continue
         elif len(v['oscar'])>1:
             raise Exception('Warning, list with more than one element!')
+        elif v['oscar'][0]['chemicalData']=={}:
+            continue
         else:
             tmp = pd.DataFrame(v['oscar'][0]['chemicalData']).T
             tmp['doi'] = k
             dflist.append(tmp)
+
+    if not len(dflist):
+        return None
 
     df = pd.concat(dflist, sort=False)
 
