@@ -95,4 +95,11 @@ def retrieve_doi_bmcchem():
     modification_doi = ["https://bmcchem.biomedcentral.com" + i for i in merged]
     return list(set(modification_doi))
 
+#from doi2bib.crossref import get_bib_from_doi
+#from crossref.restful import Works
 
+#get_bib_from_doi('10.1038/s41524-017-0032-0')
+# works = Works()  
+# works.doi('10.1590/0102-311x00133115')
+# d = works.doi('10.1038/s41524-017-0032-0')
+# 'affiliation' in d.keys()

@@ -30,7 +30,7 @@ If a new library needs to be installed, don't forget to update the environment.y
 
 Go to your `npmine_library/notebooks` directory, and execute the commands
 
-* docker run -it -p 8888:8888 -v "$PWD":/home/npmine ridasilva/npmine:v01
+* docker run -it -p 8888:8888 -v "$PWD":/home/npmine ridasilva/npmine:latest
 
 * jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root
 
