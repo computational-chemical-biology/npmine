@@ -69,10 +69,7 @@ def postprocessing(oscar_dir, gn_dir, osra_dir,
                                      consumer_key=consumer_key)])
 
     dbids = pd.DataFrame(dbid)
-    dbids.fillna(0, inplace=True)
-    dbids[1] = dbids[1].astype(int)
-    dbids[1] = dbids[1].astype(str)
-    dbids.replace('0', '', inplace=True)
+    dbids.fillna('', inplace=True)
 
     idfimg = pd.merge(imgs, dbids, left_on='standardInChIKey', right_on=0, how='left')
     idfimg.drop(0, axis=1, inplace=True)
