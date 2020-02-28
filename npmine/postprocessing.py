@@ -72,6 +72,8 @@ def sci_name_dict2dataframe(gn, identifier):
         pandas DataFrame.
     -------
     """
+    if gn['names']==None:
+        return None
     nms = []
     for nm in gn['names']:
         matchType = nm['verification']['BestResult']['matchType']
@@ -131,8 +133,14 @@ def image_dict2dataframe(img, exact_mass=True):
             s = dfimg.loc[i, 'smiles']
             m = Chem.MolFromSmiles(s)
             if m!=None:
-                dfimg.loc[i, 'standardInChIKey'] = Chem.InchiToInchiKey(Chem.MolToInchi(m))
-                dfimg.loc[i, 'ExactMolWt'] = rdMD.CalcExactMolWt(m)
+                try:
+                    dfimg.loc[i, 'standardInChIKey'] = Chem.InchiToInchiKey(Chem.MolToInchi(m))
+                except:
+                    pass
+                try:
+                    dfimg.loc[i, 'ExactMolWt'] = rdMD.CalcExactMolWt(m)
+                except:
+                    pass
 
     return dfimg
 

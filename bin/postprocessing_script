@@ -62,6 +62,7 @@ def postprocessing(oscar_dir, gn_dir, osra_dir,
     keys = sall['standardInChIKey'].unique()
     keys = keys[keys!=None]
 
+    # include reagents or previously seen list?
     dbid = []
     for k in keys:
         dbid.append([k, inchikey2cid(k,
