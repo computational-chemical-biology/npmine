@@ -25,7 +25,7 @@ setup(
           'beautifulsoup4',
           'requests'
     ],
-    scripts=['bin/postprocessing_script'],
+    scripts=['bin/postprocessing_script', 'bin/download_pdfs'],
     data_files=['cfg/config.ini'],
     dependency_links=['https://www.rdkit.org/docs/Install.html']
 )

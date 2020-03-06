@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import os
+import json
+from npmine.retrieve_chemical_entities import download_pdf
+import sys
+
+'''usage
+   download_pdfs <url_file>
+'''
+
+def download_pdfs(url_file):
+    if not os.path.exists('pdfs'):
+        os.makedirs('pdfs')
+
+    with open(url_file) as f:
+        dois = json.load(f)
+
+    for url in dois:
+        fl = 'pdfs/%s' % url.split('/')[-1]
+        download_pdf(url, fl)
+
+if __name__ == '__main__':
+    download_pdfs(sys.argv[1])
