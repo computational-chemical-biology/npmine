@@ -46,7 +46,7 @@ def inchikey2csid(inchi, consumer_key=''):
     else:
         return None
 
-def inchikey2cid(inchi, consumer_key=''):
+def inchikey2cid(inchi, chemspider=False, consumer_key=''):
     """Obtains ID of chemical entity from InCHIKeys
     Parameters
     ----------
@@ -63,4 +63,7 @@ def inchikey2cid(inchi, consumer_key=''):
     if r.status_code==200:
         return json.loads(r.text)['IdentifierList']['CID'][0]
     else:
-        return inchikey2csid(inchi, consumer_key=consumer_key)
+        if chemspider:
+            return inchikey2csid(inchi, consumer_key=consumer_key)
+        else:
+            return None
