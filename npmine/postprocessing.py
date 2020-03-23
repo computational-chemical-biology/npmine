@@ -76,6 +76,8 @@ def sci_name_dict2dataframe(gn, identifier):
         return None
     nms = []
     for nm in gn['names']:
+        if 'matchType' not in nm['verification']['BestResult'].keys():
+            continue
         matchType = nm['verification']['BestResult']['matchType']
         if matchType == 'NoMatch':
             nms.append([identifier,
@@ -95,6 +97,10 @@ def sci_name_dict2dataframe(gn, identifier):
                         nm['verification']['BestResult']['dataSourceId'],
                         nm['verification']['BestResult']['taxonId'],
                         '', '', matchType])
+
+
+    if not len(nms):
+        return None
 
     dfnms = pd.DataFrame(nms)
     dfnms.columns = ['doi', 'verbatim', 'odds', 'dataSourceId',
