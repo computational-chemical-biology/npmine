@@ -7,7 +7,7 @@ from npmine.retrieve_chemical_entities import download_pdf
 import sys
 
 '''usage
-   download_pdfs <url_file>
+   download_pdfs <urls_file> <current_files>
 '''
 
 def download_pdfs(url_file, pattern='', rpattern=''):
@@ -26,5 +26,24 @@ def download_pdfs(url_file, pattern='', rpattern=''):
             fl = 'pdfs/%s' % url.split('/')[-1]
         download_pdf(url, fl)
 
+
+def download_pdfs_alt(url):
+    fl = 'pdfs/%s.pdf' % re.sub('.+/(S.+)/.+', '\\1', url)
+    download_pdf(url, fl)
+
+
 if __name__ == '__main__':
-    download_pdfs(sys.argv[1], pattern=sys.argv[2], rpattern=sys.argv[2])
+    if not os.path.exists('pdfs'):
+        os.makedirs('pdfs')
+
+    with open(sys.argv[1]) as f:
+        dois = json.load(f)
+
+    with open(sys.argv[2]) as f:
+        fls = f.read().splitlines()
+
+    # specific hardcoded pattern
+    dois = [x for x in dois if '%s.pdf' % re.sub('.+/(S.+)/.+', '\\1', x) not in fls]
+
+    with Pool(20) as p:
+        p.map(download_pdfs_alt, dois)
