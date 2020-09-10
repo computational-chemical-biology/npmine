@@ -15,7 +15,7 @@ Documentation on the npmine package
 
 **Installation with docker**
 --------------------------- 
-* docker pull ridasilva/npmine:v01
+* docker pull ridasilva/npmine:latest
 
 Alternatively one can buil the docker image
 

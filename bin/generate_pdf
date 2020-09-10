@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+#http://eosrei.net/articles/2015/11/latex-templates-python-and-jinja2-generate-pdfs
+#https://tug.org/tug2019/slides/slides-ziegenhagen-python.pdf
+#https://github.com/UweZiegenhagen/spendenquittungen-mit-latex
+#https://github.com/dwyl/english-words
+#https://loremipsum.readthedocs.io/en/latest/#api
+
+import os
+import re
+import jinja2
+from jinja2 import Template
+from loremipsum import Generator
+import matplotlib.pyplot as plt
+from rdkit import Chem
+from rdkit.Chem import Draw
+from rdkit import DataStructs
+from rdkit.Chem import AllChem
+import numpy as np
+import requests
+import pandas as pd
+import subprocess
+import sys
+import json
+import cairosvg
+
+
+'''usage
+   generate_pdfs <number of pdfs> <data> <output>
+   data must contain:
+   structures - file containing SMILES
+   reagentes - file containing common reagent names
+   title - sentence as title example
+   abstract - paragraph as abstract example
+   words - with english dictionary
+   jinga tex - jinga tex template
+'''
+
+def mol_plot(idx, out, smi):
+    mols = [Chem.MolFromSmiles(x) for x in smi]
+    if len(mols)>1:
+        img = Draw.MolsToGridImage(mols,molsPerRow=4,
+                                   subImgSize=(200,200),
+                                   useSVG=True)
+        #img.save(os.path.join(out, '%s_mol.png' % idx))
+        #with open(os.path.join(out, '%s_mol.svg' % idx), 'w') as f:
+        #    f.write(img)
+        cairosvg.svg2pdf(img, write_to=os.path.join(out, '%s_mol.pdf' % idx))
+    #else:
+    #    Draw.MolToFile(mols[0], os.path.join(out, '%s_mol.png' % idx))
+
+def obabel_plot(idx, out, smi):
+    infile = os.path.join(out, '%s_mol.smi' % idx)
+    ofile = os.path.join(out, '%s_mol.svg' % idx)
+    with open(infile, 'w') as f:
+        for s in smi:
+            f.write("%s\n" % s)
+    subprocess.call(['obabel', infile, '-O', ofile])
+    cairosvg.svg2pdf(url=ofile, write_to=os.path.join(out, '%s_mol.pdf' % idx))
+    os.remove(infile)
+    os.remove(ofile)
+
+def print_taxa(filepath):
+    with open(filepath) as fp:
+       line = fp.readline()
+       while line:
+           line = fp.readline()
+           taxa = line.strip().split('\t|\t')[-1]
+           if len(taxa.split(';'))==8:
+               print(taxa)
+
+def noise_plot(idx, out, tp = 'bar'):
+    n = np.random.randint(2, 10, 1)[0]
+    mu, sigma = 0, 0.1
+    s = np.random.normal(mu, sigma, n)
+    if tp == 'bar':
+        plt.bar(range(n), s)
+        plt.savefig(os.path.join(out, '%s_noise.png' % idx))
+        plt.close()
+    elif tp == 'pie':
+        plt.pie(s)
+        plt.savefig(os.path.join(out, '%s_noise.png' % idx))
+        plt.close()
+    elif tp == 'line':
+        plt.plot(range(n), s)
+        plt.savefig(os.path.join(out, '%s_noise.png' % idx))
+        plt.close()
+
+
+def generate_txt(sample, dictionary, type='sentence',
+                 mix=[]):
+    with open(sample, 'r') as sample_txt:
+        sample = sample_txt.read()
+
+    with open(dictionary, 'r') as dictionary_txt:
+        dictionary = dictionary_txt.read().split()
+
+    g = Generator(sample, dictionary)
+    lmix = len(mix)
+    if type=='sentence':
+        sentence = g.generate_sentence()[2]
+        if lmix:
+            sentence = sentence.split()
+            pos = np.random.randint(0, len(sentence), lmix)
+            for i in range(lmix):
+                p = pos[i]
+                sentence.insert(p, mix[i])
+            return ' '.join(sentence)
+        else:
+            return sentence
+    elif type=='paragraph':
+        paragraph = g.generate_paragraph()[2]
+        if lmix:
+            paragraph = paragraph.split()
+            pos = np.random.randint(0, len(paragraph), lmix)
+            for i in range(lmix):
+                p = pos[i]
+                paragraph.insert(p, mix[i])
+            return ' '.join(paragraph)
+        else:
+            return paragraph
+
+def struct2name(smi):
+    url = 'https://cactus.nci.nih.gov/chemical/structure/%s/iupac_name' % smi
+    try:
+        req = requests.get(url)
+        if req.status_code==200:
+            return req.text
+        else:
+            return ''
+    except:
+        return ''
+
+def draw_sample(mx, length=10):
+    if length < 5:
+        n1 = length
+    else:
+        n1 = np.random.choice(range(2, 11), 1)[0]
+    return np.random.choice(mx, n1, replace=False)
+
+def bernoulli(random):
+    if random:
+        return np.random.choice(2, 1)[0]
+    else:
+        return 1
+
+def sample_reag(reag, length=2,
+                random=True):
+    if bernoulli(random):
+        s = draw_sample(reag.shape[0], length=length)
+        tmp = reag.loc[s, 'Reagent'].tolist()
+        return tmp
+    else:
+        return None
+
+def sample_struct(struct, length=2,
+                  random=True, names=False):
+    if bernoulli(random):
+        s = draw_sample(struct.shape[0], length=length)
+        tmp = struct.loc[s, 'SMILES'].tolist()
+        if names:
+            nms = [struct2name(x) for x in tmp]
+            nms = [x for x in nms if x!='']
+            return tmp,nms
+        else:
+            return tmp
+    else:
+        return None
+
+
+def sample_spc(spc, length=2,
+               random=True):
+    if bernoulli(random):
+        s = draw_sample(spc.shape[0], length=length)
+        tmp = spc.loc[s]
+        tmp = [x[0].split(';')[-1] for x in tmp.values]
+        return tmp
+    else:
+        return None
+
+def mol_similarity(smi1, smi2):
+    try:
+        ms1 = Chem.MolFromSmiles(smi1)
+        ms2 = Chem.MolFromSmiles(smi2)
+        #fps1 = Chem.RDKFingerprint(ms1)
+        #fps2 = Chem.RDKFingerprint(ms2)
+        fps1 = AllChem.GetMorganFingerprint(ms1, 2)
+        fps2 = AllChem.GetMorganFingerprint(ms2, 2)
+        #return DataStructs.FingerprintSimilarity(fps1, fps2)
+        return DataStructs.TanimotoSimilarity(fps1, fps2)
+    except:
+        return None
+
+if __name__=='__main__':
+    latex_jinja_env = jinja2.Environment(
+       block_start_string = '\BLOCK{',
+       block_end_string = '}',
+       variable_start_string = '\VAR{',
+       variable_end_string = '}',
+       comment_start_string = '\#{',
+       comment_end_string = '}',
+       line_statement_prefix = '%-',
+       line_comment_prefix = '%#',
+       trim_blocks = True,
+       autoescape = False,
+       loader = jinja2.FileSystemLoader(os.path.abspath('.'))
+    )
+    input = sys.argv[2]
+    out = sys.argv[3]
+
+    print("Loading data...")
+    struct = pd.read_csv(os.path.join(input, 'supernaturalCLASS.txt'), sep='\t')
+    spc = pd.read_csv(os.path.join(input, 'last_column_tx.csv'), sep='\t')
+    reag = pd.read_csv(os.path.join(input, 'reagentes.tsv'), sep='\t')
+
+
+    N = int(sys.argv[1])
+    #sections
+    #authors
+    #2-20
+    #introduction
+    #4-6 paragraphs
+    #results
+    #10-20
+    #methods
+    #7-15
+    #references
+
+    sample_list = []
+    for idx in range(N):
+        sample_dict = {'id': idx,
+                       'structures':[],
+                       'names':[],
+                       'species':[]
+                       }
+
+
+        # load template from file
+        template = latex_jinja_env.get_template(os.path.join(input, 'jinja-text.tex'))
+
+        print('Sampling abstract for pdf %s...' % idx)
+        mx_abstract = []
+        nms = sample_reag(reag)
+        if nms is not None:
+            sample_dict['names'].extend(nms)
+            mx_abstract.extend(nms)
+
+        strc = sample_struct(struct, names=True)
+        # should we store the smiles for corresponding name
+        #sample_dict['structures'].extend(strc[0])
+        if strc is not None:
+            sample_dict['names'].extend(strc[1])
+            mx_abstract.extend(strc[1])
+
+        sp = sample_spc(spc)
+        if sp is not None:
+            sample_dict['species'].extend(sp)
+            mx_abstract.extend(sp)
+
+        abstract = generate_txt(os.path.join(input,'abstract.txt'), os.path.join(input,'words_alpha.txt'),
+                                type='paragraph', mix=mx_abstract)
+
+        print('Sampling introduction for pdf %s...' % idx)
+        n = np.random.choice(7, 1)[0]
+
+        intro = []
+        for i in range(n):
+            mx_intro =[]
+            nms = sample_reag(reag)
+            if nms is not None:
+                sample_dict['names'].extend(nms)
+                mx_intro.extend(nms)
+
+            strc = sample_struct(struct, names=True)
+            # should we store the smiles for corresponding name
+            #sample_dict['structures'].extend(strc[0])
+            if strc is not None:
+                sample_dict['names'].extend(strc[1])
+                mx_intro.extend(strc[1])
+
+            sp = sample_spc(spc)
+            if sp is not None:
+                sample_dict['species'].extend(sp)
+                mx_intro.extend(sp)
+
+            intro_tmp = generate_txt(os.path.join(input,'abstract.txt'), os.path.join(input,'words_alpha.txt'),
+                                    type='paragraph', mix=mx_intro)
+            intro.append(intro_tmp)
+
+        print('Sampling results for pdf %s...' % idx)
+        n = np.random.choice([7, 8, 9, 10], 1)[0]
+
+        res = []
+        for i in range(n):
+            mx_res = []
+            strc = sample_struct(struct, names=True)
+            # should we store the smiles for corresponding name
+            #sample_dict['structures'].extend(strc[0])
+            if strc is not None:
+                sample_dict['names'].extend(strc[1])
+                mx_res.extend(strc[1])
+
+            sp = sample_spc(spc)
+            if sp is not None:
+                sample_dict['species'].extend(sp)
+                mx_res.extend(sp)
+
+            res_tmp = generate_txt(os.path.join(input,'abstract.txt'), os.path.join(input,'words_alpha.txt'),
+                                    type='paragraph', mix=mx_res)
+            res.append(res_tmp)
+
+
+        strc = sample_struct(struct, length=10)
+        first = int(np.ceil(len(res)/2))
+
+        if strc is not None:
+            sample_dict['structures'].extend(strc)
+            #mol_plot(idx, out, strc)
+            obabel_plot(idx, out, strc)
+
+
+        if bernoulli(True):
+            noise_plot(idx, out,
+                     tp=np.random.choice(['bar', 'pie', 'line'], 1)[0])
+
+        print('Sampling methods for pdf %s...' % idx)
+        n = np.random.choice([5, 7, 8], 1)[0]
+
+        mth = []
+        for i in range(n):
+            mx_mth = []
+            nms = sample_reag(reag)
+            if nms is not None:
+                sample_dict['names'].extend(nms)
+                mx_mth.extend(nms)
+
+            sp = sample_spc(spc)
+            if sp is not None:
+                sample_dict['species'].extend(sp)
+                mx_mth.extend(sp)
+
+            mth_tmp = generate_txt(os.path.join(input,'abstract.txt'), os.path.join(input,'words_alpha.txt'),
+                                   type='paragraph', mix=mx_mth)
+            mth.append(mth_tmp)
+
+
+        # combine template and variables
+        print('Writing the template for %s...' % idx)
+        document = template.render(title=generate_txt(os.path.join(input,'title.txt'),
+                                                      os.path.join(input,'words_alpha.txt')),
+                                   author1=generate_txt(os.path.join(input,'title.txt'),
+                                                        os.path.join(input,'words_alpha.txt')),
+                                   author2=generate_txt(os.path.join(input,'title.txt'),
+                                                        os.path.join(input,'words_alpha.txt')),
+                                   author3=generate_txt(os.path.join(input,'title.txt'),
+                                                        os.path.join(input,'words_alpha.txt')),
+                                   abstract=abstract,
+                                   introduction='\n'.join(intro),
+                                   results1='\n'.join(res[:first]),
+                                   fig1=os.path.join(out, '%s_mol.pdf' % idx),
+                                   results2='\n'.join(res[first:]),
+                                   fig2=os.path.join(out, '%s_noise.png' % idx),
+                                   experimental='\n'.join(mth))
+
+        #write document
+        with open(os.path.join(out, 'final-%s.tex' % idx),'w') as output:
+            output.write(document)
+
+        print('Compiling pedf for %s...' % idx)
+        subprocess.call(['pdflatex', '--interaction=nonstopmode',
+                        '-output-directory=%s' % out, os.path.join(out, 'final-%s.tex' % idx)])
+        sample_list.append(sample_dict)
+        toclean = os.listdir(out)
+        [os.remove(os.path.join(out, x)) for x in toclean if not bool(re.match('final-\d+.pdf', x))]
+
+    with open(os.path.join(out, 'structures_%s_pdfs.json' % N),'w') as output:
+        json.dump(sample_list, output, indent=4)
