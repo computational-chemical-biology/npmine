@@ -80,9 +80,14 @@ def sci_name_dict2dataframe(gn, identifier):
             continue
         matchType = nm['verification']['BestResult']['matchType']
         if matchType == 'NoMatch':
-            nms.append([identifier,
-                        nm['verbatim'], nm['odds'],
-                        '', '', '', '', matchType])
+            if 'odds' in nm.keys():
+                nms.append([identifier,
+                            nm['verbatim'], nm['odds'],
+                            '', '', '', '', matchType])
+            else:
+                nms.append([identifier,
+                            nm['verbatim'], pd.np.nan,
+                            '', '', '', '', matchType])
         elif 'classificationRank' in nm['verification']['BestResult'].keys():
             nms.append([identifier,
                         nm['verbatim'], nm['odds'],
