@@ -1,0 +1,34 @@
+import os
+import pandas as pd
+from rdkit import Chem
+from npmine.fit_entity_model import *
+import click
+
+@click.command()
+@click.option('--acty', '-a', required=True, help='Bioactivity file')
+@click.option('--aid', '-i', default=0, help='AID count')
+@click.option('--entity_dir', '-d',  help='Chemical entities directory')
+@click.option('--naid', '-n',  help='AID number')
+def main(acty, aid, entity_dir, naid):
+    acty = pd.read_csv(acty, sep='\t')
+    acty['AID'] = acty['AID'].astype(str)
+    if aid:
+        print(acty['AID'].value_counts())
+    else:
+        fls = [x for x in os.listdir(entity_dir) if 'entities_img_dataframe_'
+               in x]
+        print('Entity files:\n', fls)
+        pdlist = [pd.read_csv(os.path.join(entity_dir, x), sep='\t') for x in fls]
+
+        comp = pd.concat([x[['smiles', 'standardInChIKey', 'standardInChI',
+                             'pubchem']] for x in pdlist])
+        comp.reset_index(drop=True, inplace=True)
+        comp.loc[comp['pubchem'].str.contains('csid')==True, 'pubchem'] = 0
+        comp.loc[comp['pubchem'].isnull(), 'pubchem'] = 0
+        comp['pubchem'] = comp['pubchem'].astype(int)
+
+        apply_model(acty, comp, naid)
+
+
+if __name__ == '__main__':
+    main()
