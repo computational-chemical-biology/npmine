@@ -13,7 +13,7 @@ def get_bioactivity(queries, chunksize=50):
     ----------
     """
     jlist = []
-    for i in range(46100, len(queries), chunksize):
+    for i in range(0, len(queries), chunksize):
         to_query = queries[i:i+chunksize]
         ids = ','.join(map(str, to_query.tolist()))
         url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/%s/assaysummary/JSON' % ids
