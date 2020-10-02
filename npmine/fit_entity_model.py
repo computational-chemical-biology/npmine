@@ -146,11 +146,11 @@ def model_predict(input_model, inchi, tp='descriptors'):
     if np.any(np.isnan(descrs)):
         # better way to replace?
         descrs[np.isnan(descrs)] = 0
-    scaler = joblib.load(os.path.join(out,"scaler.pkl"))
-    clf = joblib.load(os.path.join(out,"rf_model.pkl"))
+    scaler = joblib.load(os.path.join(input_model,"scaler.pkl"))
+    clf = joblib.load(os.path.join(input_model,"rf_model.pkl"))
     x = scaler.transform(descrs)
     pred = clf.predict(x)
-    with open(os.path.join(out, 'labels.json')) as f:
+    with open(os.path.join(input_model, 'labels.json')) as f:
         labels = json.load(f)
     return [labels[str(x)] for x in pred]
 

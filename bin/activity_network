@@ -1,0 +1,150 @@
+from pyvis.network import Network
+from rdkit import Chem
+import networkx as nx
+import pandas as pd
+import os, re
+import click
+#from npmine.fit_entity_model import model_predict
+
+def inchi2smiles(inchi):
+    return Chem.MolToSmiles(Chem.MolFromInchi(inchi))
+
+def smiles2inchi(smiles):
+    return Chem.MolToInchi(Chem.MolFromSmiles(smiles))
+
+def count_aid(acy):
+    acy = pd.read_csv(acy, sep='\t')
+    print(acy['AID'].value_counts())
+
+def count_connected_component(net_stats):
+    stat = pd.read_csv(net_stats, sep='\t')
+    print(stat['connected_component'].value_counts())
+
+def write_lead_subnet(aid, out_dir):
+    fls = [x for x in os.listdir(out_dir) if aid in x]
+    sfl = [x for x in fls if bool(re.match('subnet_%s_\d_\d.txt' % aid, x))][0]
+    subnet = pd.read_csv(os.path.join(out_dir, sfl), sep='\t')
+    afl = [x for x in fls if bool(re.match('subnet_%s_\d_\d_attr.txt' % aid, x))][0]
+    attr = pd.read_csv(os.path.join(out_dir, afl), sep='\t')
+    leads = attr.loc[attr['Leads']==1, 'standardInChIKey'].tolist()
+    subnet_leads = subnet[(subnet['1'].isin(leads)) | (subnet['2'].isin(leads))]
+    subnet_leads.to_csv(os.path.join(out_dir, 'subnet_%s_leads.txt' % aid), sep='\t', index=None)
+
+def predict_leads(aid, qsar_dir, out_dir):
+    fls = [x for x in os.listdir(out_dir) if aid in x]
+    afl = [x for x in fls if bool(re.match('subnet_%s_\d_\d_attr.txt' % aid, x))][0]
+    attr = pd.read_csv(os.path.join(out_dir, afl), sep='\t')
+    leads = attr.loc[attr['Leads']==1, 'standardInChI'].tolist()
+
+    # Double check
+    #model_predict('qsar/1296008/', attr.loc[attr['Bioactivity Outcome']=='Active', 'standardInChI'].tolist())
+    attr.loc[attr['Leads']==1,'predicted_activity'] = model_predict(os.path.join(qsar_dir, aid), leads)
+    attr.to_csv(os.path.join(out_dir, afl), sep='\t', index=None)
+
+
+
+def write_bioactive_net(net_stats, edge_list, entity_dir,
+                        acy, aid, conn, out_dir, sconn=0, plot=False):
+    stat = pd.read_csv(net_stats, sep='\t')
+    net = pd.read_csv(edge_list, sep='\t', header=None)
+
+    fls = [x for x in os.listdir(entity_dir) if 'entities_img_dataframe_' in x]
+    pdlist = [pd.read_csv(os.path.join(entity_dir, x), sep='\t') for x in fls]
+    comp = pd.concat([x[['smiles', 'standardInChIKey', 'standardInChI',
+                     'pubchem']] for x in pdlist])
+
+    comp.reset_index(drop=True, inplace=True)
+    comp.loc[comp['pubchem'].str.contains('csid')==True, 'pubchem'] = 0
+    comp.loc[comp['pubchem'].isnull(), 'pubchem'] = 0
+    comp['pubchem'] = comp['pubchem'].astype(int)
+    comp = comp[~comp['pubchem'].duplicated()]
+
+    comp.fillna('', inplace=True)
+
+    if sum((comp['smiles']!='') & (comp['standardInChI']=='')):
+        inchi = []
+        for i in comp.index:
+            if comp.loc[i, 'smiles']!='' and comp.loc[i, 'standardInChI']=='':
+                try:
+                    inchi.append(smiles2inchi(comp.loc[i, 'smiles']))
+                except:
+                    inchi.append('')
+
+        comp.loc[(comp['smiles']!='') & (comp['standardInChI']==''), 'standardInChI'] = inchi
+
+    acy = pd.read_csv(acy, sep='\t')
+    acy['AID'] = acy['AID'].astype(str)
+
+    sel = acy[acy['AID']==aid]
+    sel['CID'] = sel['CID'].astype(int)
+    sel = sel[['CID', 'Bioactivity Outcome']]
+    sel = sel[~sel['CID'].duplicated()]
+
+    sel = pd.merge(comp, sel[['CID', 'Bioactivity Outcome']],
+                   right_on='CID', left_on='pubchem', how='left')
+    sel = pd.merge(sel, stat, right_on='index', left_on='standardInChIKey')
+    if sconn:
+        print(sel['connected_component'].value_counts())
+    else:
+        vals = stat.loc[stat['connected_component']==int(conn), 'index'].values
+        subnet = net[net[1].isin(vals) & net[2].isin(vals)]
+
+        # find and tag interesting nodes
+        act = sel.loc[sel['Bioactivity Outcome']=='Active', 'standardInChIKey'].values
+        leads = []
+        for a in act:
+            s = subnet.loc[(subnet[1]==a) | (subnet[2]==a), [1, 2]]
+            if len(s):
+                s = list(s[1].values.tolist()+s[2].values.tolist())
+                leads.extend(s)
+
+        leads = list(set(leads)-set(act))
+        sel['Leads'] = 0
+        nlead = 0
+        if sel['standardInChIKey'].isin(leads).any():
+            nlead = 1
+            print('Found', len(leads), 'leads.')
+            sel.loc[sel['standardInChIKey'].isin(leads), 'Leads'] = 1
+
+        subnet.to_csv(os.path.join(out_dir, 'subnet_%s_%s_%s.txt' % (aid, conn,
+                                                                     nlead)),
+                      sep='\t', index=None)
+        if plot:
+            g = nx.Graph()
+            g.add_weighted_edges_from(list(zip(subnet['1'].tolist(),
+                                               subnet['2'].tolist(),
+                                               [0]*subnet.shape[0])))
+            nt = Network("500px", "500px")
+            nt.from_nx(g)
+        sel[sel['connected_component']==int(conn)].to_csv(os.path.join(out_dir,
+                                                         'subnet_%s_%s_%s_attr.txt'
+                                                                       % (aid,
+                                                                          conn,
+                                                                          nlead)),
+                                                     sep='\t', index=None)
+
+
+@click.command()
+@click.option('--net_stats', '-n', help='Network statistics')
+@click.option('--edge_list', '-e', help='Edge list')
+@click.option('--entity_dir', '-d',  help='Chemical entities directory')
+@click.option('--acy', '-a', help='Bioactivity file')
+@click.option('--aid', '-i',  help='AID number')
+@click.option('--conn', '-c',  help='Connected component number')
+@click.option('--out_dir', '-o',  help='Output directory')
+@click.option('--sconn',  default=0, help='Selected connected component count')
+@click.option('--naid',  default=0, help='AID count')
+@click.option('--nconn', default=0, help='Connected component count')
+def main(net_stats, edge_list, entity_dir,
+         acy, aid, conn, out_dir,
+         sconn, naid, nconn):
+    if naid:
+        count_aid(acy)
+    elif nconn:
+        count_connected_component(net_stats)
+    else:
+        write_bioactive_net(net_stats, edge_list, entity_dir,
+                            acy, aid, conn, out_dir, sconn)
+
+if __name__=='__main__':
+    main()
