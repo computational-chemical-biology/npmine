@@ -41,7 +41,41 @@ def predict_leads(aid, qsar_dir, out_dir):
     attr.loc[attr['Leads']==1,'predicted_activity'] = model_predict(os.path.join(qsar_dir, aid), leads)
     attr.to_csv(os.path.join(out_dir, afl), sep='\t', index=None)
 
+def find_break_point(edge_list, toremove):
+    g = nx.Graph()
+    g.add_edges_from(edge_list)
+    g.remove_edge(toremove[0], toremove[1])
+    c = sorted(nx.connected_components(g), key = len, reverse=True)
+    if len(c)>1:
+        return True
+    else:
+        return False
 
+def create_sparce_graph(edge_list, attr, conn, out_dir):
+    sub = pd.read_csv(os.path.join(out_dir, edge_list), sep='\t')
+    attr = pd.read_csv(os.path.join(out_dir, attr), sep='\t')
+    g = nx.Graph()
+    g.add_edges_from(sub[['1', '2']].apply(lambda a: a.tolist(), axis=1).tolist())
+    c = sorted(nx.connected_components(g), key = len, reverse=True)
+    csub = sub[(sub['1'].isin(c[conn])) | (sub['2'].isin(c[conn]))]
+    nds = attr[(attr['standardInChIKey'].isin(c[1])) & ((~attr['Bioactivity Outcome'].isnull()) | (~attr['predicted_activity'].isnull()))]
+    csub = csub[(csub['1'].isin(nds['standardInChIKey'])) & (csub['2'].isin(nds['standardInChIKey']))]
+
+    tsub = csub.copy()
+    for n in nds.iloc[:,1].tolist():
+        scores = tsub.loc[(tsub['1']==n) | (tsub['2']==n), '3']
+        if not len(scores):
+            continue
+        for i in scores.index:
+            e = tsub.loc[i,['1', '2']].tolist()
+            a = find_break_point(tsub[['1', '2']].apply(lambda a: a.tolist(),
+                                                       axis=1).tolist(), e)
+            if a:
+                continue
+            else:
+                tsub.drop(i, inplace=True)
+    outname = re.sub('.txt$', '_conn_%s.txt' % conn, edge_list)
+    tsub.to_csv(os.path.join(out_dir, outname), sep='\t', index=None)
 
 def write_bioactive_net(net_stats, edge_list, entity_dir,
                         acy, aid, conn, out_dir, sconn=0, plot=False):
