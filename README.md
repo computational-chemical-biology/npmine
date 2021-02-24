@@ -52,14 +52,13 @@ docker run -it -p 8888:8888 -v "$PWD":/home/npmine ridasilva/npmine:latest
 jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root
 ```
 
-## Getting started
+## Installing packages individually 
  
-- Load python terminal and load packages
-- `Install docker and pull OSRA <https://hub.docker.com/r/cyclica/osra>`_
-- `Install gnfinder <https://github.com/gnames/gnfinder>`_
-- `Install oscarpdf2json command line tool <https://bitbucket.org/mjw99/chemextractor/src/master/>`_
+- Install docker and pull [OSRA](https://hub.docker.com/r/cyclica/osra)
+- Install (gnfinder)[https://github.com/gnames/gnfinder]
+- Install [oscarpdf2json](https://bitbucket.org/mjw99/chemextractor/src/master/) command line tool
 
-## Usage
+## API usage
 
 ```
 from npmine.retrieve_chemical_entities import retrieve_chemical_entities
@@ -76,13 +75,13 @@ This project is licensed under the BSD 3-Clause License - see the LICENSE file f
 
 ## Acknowledgements
 
-- `OSRA (Optical Structure Recognition Application) <https://cactus.nci.nih.gov/osra/#9>`_ - **Igor Filippov** - 2007, SAIC-Frederick, Frederick National Laboratory for Cancer Research, NIH, DHHS, Frederick, MD 
+- [OSRA](https://cactus.nci.nih.gov/osra/#9) (Optical Structure Recognition Application) - **Igor Filippov** - 2007, SAIC-Frederick, Frederick National Laboratory for Cancer Research, NIH, DHHS, Frederick, MD 
 
-- `Image file of the latest OSRA build, based on open-babel and osra <https://hub.docker.com/r/cyclica/osra>`_ - **Leonard Morayniss**
+- Image file of the latest OSRA build, based on open-babel and [osra](https://hub.docker.com/r/cyclica/osra) - **Leonard Morayniss**
 
-- `gnfinder (Global Names Finder) <https://github.com/gnames/gnfinder>`_ - **gnames**
+- [gnfinder](https://github.com/gnames/gnfinder) (Global Names Finder) - **gnames**
 
-- `OSCAR4 (Open-Source Chemistry Analysis Routines) <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3205045/>`_ -  **David M. Jessop, Sam E. Adams, Egon L. Willighagen, Lezan Hawizy, Peter Murray-Rust** 
+- [OSCAR4](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3205045/) (Open-Source Chemistry Analysis Routines) -  **David M. Jessop, Sam E. Adams, Egon L. Willighagen, Lezan Hawizy, Peter Murray-Rust** 
 
-- `oscarpdf2json <https://bitbucket.org/mjw99/chemextractor/src/master/>`_ - **Mark Williamson**
+- [oscarpdf2json](https://bitbucket.org/mjw99/chemextractor/src/master/) - **Mark Williamson**
 
