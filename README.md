@@ -21,7 +21,7 @@ Create a dedicated conda environment and activate
 ```
 conda env create -f environment.yml
 conda activate nplibrary
-pip install git+https://gitlab.com/rsilvabioinfo/chemwalker.git
+pip install git+https://github.com/computational-chemical-biology/npmine.git
 ```
  
 ## Installation with docker
