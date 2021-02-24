@@ -1,6 +1,7 @@
 import json
 import re
 import os
+import requests
 
 from rdkit import Chem
 from rdkit.Chem import Draw
@@ -139,7 +140,8 @@ def create_report(report_print, dois, out_file='npmine_report.html',
             fig = "./figs/%s.png" % report_print.loc[i, 'pubchem']
         report_print.loc[i, 'Structure'] = '<img src="%s" width="120" height="120">' % fig
         report_print.loc[i, 'pubchem'] = '<a href="https://pubchem.ncbi.nlm.nih.gov/compound/{}" target="_blank">{}</a>'.format(*[int(report_print.loc[i, 'pubchem']), int(report_print.loc[i, 'pubchem'])])
-        report_print.loc[i, 'smiles'] = '<a href="https://pubchem.ncbi.nlm.nih.gov/edit3/index.html?smiles={}" target="_blank">{}</a>'.format(*[report_print.loc[i, 'smiles'], 'PubChem Sketcher'])
+        smi = requests.utils.quote(report_print.loc[i, 'smiles'])
+        report_print.loc[i, 'smiles'] = '<a href="https://pubchem.ncbi.nlm.nih.gov/edit3/index.html?smiles={}" target="_blank">{}</a>'.format(*[smi, 'PubChem Sketcher'])
 
     html_local = re.sub('REPLACE', json.dumps(report_print.apply(lambda a: a.tolist(), axis=1).tolist()), html)
     with open(out_file, 'w+') as f:

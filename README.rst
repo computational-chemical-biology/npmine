@@ -2,17 +2,31 @@
 **npmine** 
 ===========================
 
-Documentation on the npmine package
+<p align="center">
+  <img src="https://github.com/computational-chemical-biology/npmine/blob/master/img/npmine.png" alt="logo"/>
+</p>
+
+NPMINE package performs semi-automated retrieval of chemical and phylogenetic information from natural products literature.
 
 **Installation**
 ---------------------------
 
-* conda create -n nplibrary   
-* conda install -n nplibrary rdkit -c rdkit 
-* source activate nplibrary
-* pip install bs4 requests pandas 
-* python setup.py install
+Install conda
 
+```
+wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+bash Miniconda2-latest-Linux-x86_64.sh
+
+```
+   
+Create a dedicated conda environment and activate
+
+```
+conda env create -f environment.yml
+conda activate nplibrary
+pip install git+https://gitlab.com/rsilvabioinfo/chemwalker.git
+```
+ 
 **Installation with docker**
 --------------------------- 
 * docker pull ridasilva/npmine:latest
@@ -45,8 +59,8 @@ Go to your `npmine_library/notebooks` directory, and execute the commands
 **Usage**
 ---------------------------
 
-* from npmine.retrieve_doi import retrieve_doi 
-* dois = retrieve_doi() 
+* from npmine.retrieve_chemical_entities import retrieve_chemical_entities
+* help(retrieve_chemical_entities) 
 
 
 **Contributing**
