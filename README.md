@@ -55,7 +55,7 @@ jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root
 ## Installing packages individually 
  
 - Install docker and pull [OSRA](https://hub.docker.com/r/cyclica/osra)
-- Install (gnfinder)[https://github.com/gnames/gnfinder]
+- Install [gnfinder](https://github.com/gnames/gnfinder)
 - Install [oscarpdf2json](https://bitbucket.org/mjw99/chemextractor/src/master/) command line tool
 
 ## API usage
