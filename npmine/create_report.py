@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from IPython.display import SVG
 import matplotlib.pyplot as plt
+from npmine.retrieve_ID_pubchem_spiderchem import inchikey2cid
 
 html = '''<!DOCTYPE html>
 <html>
