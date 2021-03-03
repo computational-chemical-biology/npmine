@@ -82,6 +82,32 @@ html = '''<!DOCTYPE html>
   </body>
 </html>'''
 
+def inchi2smiles(inchi):
+    return Chem.MolToSmiles(Chem.MolFromInchi(inchi))
+
+def format_source_table(oscar_list, osra_list):
+    df_oscar = pd.concat(oscar_list)
+    df_oscar['source'] = 'oscar'
+    df_oscar['pubchem'] = [inchikey2cid(x) for x in df_oscar['standardInChIKey']]
+
+    df_osra = pd.concat(osra_list)
+    df_osra['source'] = 'osra'
+    df_oscar['smiles'] = [inchi2smiles(x) for x in df_oscar['standardInChI']]
+
+    pubchem = []
+    for x in df_osra['standardInChIKey']:
+        cid = inchikey2cid(x)
+        if not cid is None:
+            pubchem.append(cid)
+        else:
+            pubchem.append(0)
+
+    df_osra['pubchem'] = pubchem
+
+    report_print = pd.concat([df_oscar[['doi', 'pubchem', 'ExactMolWt', 'smiles','source']],
+                              df_osra[['doi', 'pubchem', 'ExactMolWt', 'smiles','source']]]).reset_index(drop=True)
+    return report_print
+
 def create_report(report_print, dois, out_file='npmine_report.html',
                   useSVG=False):
     """Creates an html report from NPMINE's results
