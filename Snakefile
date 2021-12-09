@@ -5,8 +5,7 @@ samples = [x.replace('.pdf', '') for x in samples]
 
 rule all:
     input:
-        "comp_results/entities_img_dataframe.tsv",
-        "comp_results/gn_dataframe.tsv"
+        "comp_results/npmine_report.html"
 
 rule pdftotext:
     input:
@@ -56,3 +55,10 @@ rule postprocessing:
         osra_lst = input.osra[0]
         shell("postprocessing_script {oscar_lst} {gn_lst} {osra_lst} {params.consumer_key} {output.entities} {output.gnames}")
 
+rule html_report:
+    input:
+        entities="comp_results/entities_img_dataframe.tsv"
+    output:
+        report="comp_results/npmine_report.html"
+    shell:
+        "html_report {input} {output}"

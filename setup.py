@@ -25,7 +25,7 @@ setup(
           'beautifulsoup4',
           'requests'
     ],
-    scripts=['bin/activity_network', 'bin/find_active_features',
+    scripts=['bin/activity_network', 'bin/find_active_features', 'bin/html_report',
              'bin/generate_pdf', 'bin/postprocessing_script', 'bin/download_pdfs'],
     data_files=['cfg/config.ini'],
     dependency_links=['https://www.rdkit.org/docs/Install.html']
