@@ -93,10 +93,9 @@ def fit_model(inchi, groups, out, tp='descriptors'):
 
     print(Counter(groups))
 
-    seed = 42
-    x_tr, x_ts, y_tr, y_ts = train_test_split(descrs, y, random_state=seed)
+    x_tr, x_ts, y_tr, y_ts = train_test_split(descrs, y)
 
-    cv = StratifiedKFold(n_splits=5, random_state=seed)
+    cv = StratifiedKFold(n_splits=5)
 
     # obtain scale object which can be further applied to scale any data to fit the training set
     # for binary?
