@@ -75,7 +75,7 @@ This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICE
 
 ## Datasets
 
-Access Zenodo to download the compounds and nomenclature extracted by NPMINE.
+Access Zenodo to download the compounds and nomenclature extracted by NPMINE and the bioactivity data.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8114531.svg)](https://doi.org/10.5281/zenodo.8114531)
 
