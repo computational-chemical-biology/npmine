@@ -73,6 +73,12 @@ To contribute, fork the repository and make a "Pull Request" with your edits. Fo
 
 This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details
 
+## Datasets
+
+Access Zenodo to download the compounds and nomenclature extracted by NPMINE and the bioactivity data.
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8114531.svg)](https://doi.org/10.5281/zenodo.8114531)
+
 ## Acknowledgements
 
 - [OSRA](https://cactus.nci.nih.gov/osra/#9) (Optical Structure Recognition Application) - **Igor Filippov** - 2007, SAIC-Frederick, Frederick National Laboratory for Cancer Research, NIH, DHHS, Frederick, MD 
