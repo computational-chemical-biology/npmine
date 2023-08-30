@@ -45,7 +45,7 @@ conda env export | grep -v "^prefix: " > environment.yml
 
 ## Using npmine docker
 
-Go to your `npmine_library/notebooks` directory, and execute the commands
+Go to your `npmine/notebooks` directory, and execute the commands
 
 ```
 docker run -it -p 8888:8888 -v "$PWD":/home/npmine ridasilva/npmine:latest
